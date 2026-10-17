@@ -21,7 +21,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22]
+        # pnpm 11 (pinned below) requires Node >= 22.13, matching .nvmrc.
+        node: [22, 24]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
