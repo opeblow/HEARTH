@@ -1,6 +1,10 @@
-# Hearth
+<p align="center">
+  <img src="src/app/icon.svg" alt="Hearth favicon" width="72" height="72" />
+</p>
 
-**Rebuild your cultural home in any city.**
+<h1 align="center">Hearth</h1>
+
+<p align="center"><b>Rebuild your cultural home in any city.</b></p>
 
 Hearth is a taste-transfer agent. You tell it the places, music, food and films
 that made your old city feel like home; it finds their equivalents in the city
@@ -12,8 +16,8 @@ obsessive about one thing: **it never invents a place.** Every recommendation is
 grounded in a real Qloo entity returned by the current run, and a deterministic
 verifier drops anything the model can't trace back.
 
-[![CI](https://github.com/OWNER/hearth/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
-[![CodeQL](https://github.com/OWNER/hearth/actions/workflows/codeql.yml/badge.svg)](../../actions/workflows/codeql.yml)
+[![CI](https://github.com/opeblow/HEARTH/actions/workflows/ci.yml/badge.svg)](https://github.com/opeblow/HEARTH/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/opeblow/HEARTH/actions/workflows/codeql.yml/badge.svg)](https://github.com/opeblow/HEARTH/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-e7b66a.svg)](./LICENSE)
 
 ---
@@ -27,7 +31,7 @@ verifier drops anything the model can't trace back.
 - [Environment variables](#environment-variables)
 - [Scripts](#scripts)
 - [Performance](#performance)
-- [Architecture](#architecture)
+- [Project structure](#project-structure)
 - [API](#api)
 - [Testing](#testing)
 - [Deployment](#deployment)
@@ -145,29 +149,65 @@ Hearth is built to feel instant, and the agent pipeline is engineered for it:
 - **Tree-shaken imports.** `optimizePackageImports` trims icon/motion/util barrels
   for smaller client bundles.
 
-## Architecture
+## Project structure
 
 ```
-src/
-  app/                     Next.js App Router
-    page.tsx               Landing
-    start/                 Intake: anchors + preferences
-    bridge/                The taste transfer itself (streamed run)
-    plan/                  30-day soft-landing plan
-    blend/                 Blend two people's taste
-    proof/                 Hearth vs an LLM-only baseline
-    privacy/               What stays on your device
-    s/[id]/                Shared result card
-    api/                   agent (SSE), search, share, health
-  components/
-    hearth/                Product components
-    aceternity/ magicui/   Motion/layout primitives
-    ui/                    Design-system primitives
-  lib/
-    agent/                 run loop, verifier, planner, prompts, llm, events
-    qloo/                  client, cache, queries, schemas, fixtures, engine
-    security/              env, sanitize, ratelimit
-    domain.ts shared.ts ics.ts store.ts utils.ts
+HEARTH/
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml                     CI: typecheck, lint, test, build (Node 20 + 22)
+│   │   └── codeql.yml                 CodeQL security scanning
+│   ├── dependabot.yml                 Dependency update automation
+│   └── PULL_REQUEST_TEMPLATE.md
+├── src/
+│   ├── app/                           Next.js App Router
+│   │   ├── layout.tsx                 Root layout: fonts, theme, nav
+│   │   ├── page.tsx                   Landing page
+│   │   ├── icon.svg                   Favicon (served automatically by Next.js)
+│   │   ├── globals.css                Design tokens and global styles
+│   │   ├── error.tsx                  Client error boundary
+│   │   ├── not-found.tsx              Custom 404
+│   │   ├── start/                     Intake: anchors + preferences
+│   │   ├── bridge/                    The taste transfer (streamed run)
+│   │   ├── plan/                      30-day soft-landing plan
+│   │   ├── blend/                     Blend two people's taste
+│   │   ├── proof/                     Hearth vs an LLM-only baseline
+│   │   ├── privacy/                   What stays on your device
+│   │   ├── s/[id]/                    Shared result card
+│   │   └── api/
+│   │       ├── agent/route.ts         POST: SSE agent run (+ route.test.ts)
+│   │       ├── search/route.ts        GET: anchor search
+│   │       ├── share/route.ts         Create / read / revoke share cards
+│   │       └── health/route.ts        GET: config + readiness report
+│   ├── components/
+│   │   ├── hearth/                    Product components (nav, cards, console, ...)
+│   │   ├── aceternity/                Motion/layout primitives (bento, spotlight, ...)
+│   │   ├── magicui/                   Animation primitives (marquee, beams, ...)
+│   │   └── ui/                        Design-system primitives (button, dialog, ...)
+│   ├── lib/
+│   │   ├── agent/                     run loop, verifier, planner, prompts, llm, events
+│   │   ├── qloo/                      client, cache, queries, schemas, fixtures, engine
+│   │   ├── security/                  env validation, sanitize, ratelimit
+│   │   ├── domain.ts                  Core domain types
+│   │   ├── share.ts                   Share-card data helpers
+│   │   ├── ics.ts                     ICS calendar generation
+│   │   ├── personas.ts                Taste persona presets
+│   │   ├── store.ts                   Client preference store
+│   │   └── utils.ts                   Shared utilities
+│   ├── instrumentation.ts             Server instrumentation hook
+│   └── test/stubs/server-only.ts      Test stub for the server-only marker
+├── .env.example                       Environment variable documentation
+├── .gitignore                         Ignores secrets, node_modules, production/
+├── .nvmrc                             Pinned Node version
+├── next.config.ts                     Security headers (CSP/HSTS) + build config
+├── package.json                       Scripts and dependencies
+├── pnpm-lock.yaml                     Locked dependency tree
+├── pnpm-workspace.yaml                pnpm workspace/build configuration
+├── postcss.config.mjs                 Tailwind CSS via PostCSS
+├── tsconfig.json                      Strict TypeScript config
+├── vitest.config.ts                   Vitest test environment
+├── eslint.config.mjs                  ESLint flat config
+├── README.md  SECURITY.md  CONTRIBUTING.md  CODE_OF_CONDUCT.md  LICENSE
 ```
 
 - **Framework:** Next.js 16 (App Router, React 19, Turbopack).
