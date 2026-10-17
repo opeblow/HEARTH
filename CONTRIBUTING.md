@@ -14,7 +14,7 @@ enough to need care — this guide keeps changes reviewable.
 
 ## Getting set up
 
-Requires Node >= 20.11 and pnpm.
+Requires Node >= 22.13 and pnpm.
 
 ```bash
 pnpm install
