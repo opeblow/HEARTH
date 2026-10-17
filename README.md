@@ -81,7 +81,7 @@ the plan.
 
 ## Quick start
 
-Requires **Node >= 20.11** and **pnpm**.
+Requires **Node >= 22.13** and **pnpm**.
 
 ```bash
 pnpm install
@@ -155,7 +155,7 @@ Hearth is built to feel instant, and the agent pipeline is engineered for it:
 HEARTH/
 ├── .github/
 │   ├── workflows/
-│   │   ├── ci.yml                     CI: typecheck, lint, test, build (Node 20 + 22)
+│   │   ├── ci.yml                     CI: typecheck, lint, test, build (Node 22 + 24)
 │   │   └── codeql.yml                 CodeQL security scanning
 │   ├── dependabot.yml                 Dependency update automation
 │   └── PULL_REQUEST_TEMPLATE.md
