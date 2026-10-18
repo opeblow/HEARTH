@@ -6,6 +6,7 @@ import { Check, Copy, Link2, Trash2, Users } from "lucide-react";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { RunConsole } from "@/components/hearth/run-console";
 import { SourceBadge } from "@/components/hearth/source-badge";
+import { apiUrl } from "@/lib/api";
 import { PageHeader } from "@/components/hearth/page-header";
 import { Reveal } from "@/components/hearth/reveal";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export function BlendClient() {
       return;
     }
     try {
-      const res = await fetch(`/api/share?id=${id}`);
+      const res = await fetch(apiUrl(`/api/share?id=${id}`));
       if (!res.ok) throw new Error("not found");
       const data = (await res.json()) as { card: ShareCard };
       setCard(data.card);
@@ -59,7 +60,7 @@ export function BlendClient() {
     if (!run || run.places.length === 0) return;
     const picks = run.places.slice(0, 8);
     try {
-      const res = await fetch("/api/share", {
+      const res = await fetch(apiUrl("/api/share"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ title: `Hearth picks for ${run.destination}`, destination: run.destination, picks }),
@@ -77,7 +78,7 @@ export function BlendClient() {
     if (!published) return;
     const tokens = await listShareTokens();
     const token = tokens[published.id] ?? published.token;
-    await fetch("/api/share", {
+    await fetch(apiUrl("/api/share"), {
       method: "DELETE",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ id: published.id, deleteToken: token }),
