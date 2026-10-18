@@ -4,6 +4,11 @@ import { notFound } from "next/navigation";
 import { ShareCardView } from "@/components/hearth/share-card-view";
 import { getShareCard } from "@/lib/share";
 
+/**
+ * Server-rendered share page (single-deploy mode). Split static hosting
+ * (Cloudflare Pages) excludes this route and rewrites /s/:id to the client
+ * /card page via public/_redirects, which fetches the card from the API.
+ */
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
