@@ -6,6 +6,7 @@ import { Sparkles } from "lucide-react";
 import { AnchorSearch } from "@/components/hearth/anchor-search";
 import { PrefsControls } from "@/components/hearth/prefs-controls";
 import { RunConsole } from "@/components/hearth/run-console";
+import { apiUrl } from "@/lib/api";
 import { PageHeader } from "@/components/hearth/page-header";
 import { Reveal } from "@/components/hearth/reveal";
 import { Field } from "@/components/ui/field";
@@ -39,7 +40,7 @@ const CITY_SUGGESTIONS = [
 async function resolveAnchorNames(names: string[]): Promise<EntityRef[]> {
   const settled = await Promise.allSettled(
     names.map(async (name) => {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(name)}`);
+      const res = await fetch(apiUrl(`/api/search?q=${encodeURIComponent(name)}`));
       if (!res.ok) return null;
       const data = (await res.json()) as { entities?: EntityRef[] };
       return data.entities?.[0] ?? null;
