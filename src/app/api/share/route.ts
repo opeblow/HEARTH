@@ -6,6 +6,11 @@ import { handleOptions, withCors } from "@/lib/security/cors";
 
 export const dynamic = "force-dynamic";
 
+/** CORS preflight. */
+export function OPTIONS(request: Request) {
+  return handleOptions(request) ?? new Response(null, { status: 204 });
+}
+
 const coordsSchema = z.object({ lat: z.number(), lon: z.number() });
 
 const placeSchema = z.object({
