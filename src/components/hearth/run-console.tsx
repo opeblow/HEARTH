@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { MultiStepLoader, type LoaderStep } from "@/components/magicui/multi-step-loader";
 import { Button } from "@/components/ui/button";
+import { apiUrl } from "@/lib/api";
 import { saveRun } from "@/lib/store";
 import type { EntityRef, Prefs, RunResult, TraceEvent } from "@/lib/domain";
 
@@ -49,7 +50,7 @@ export function RunConsole({
     setTrace([]);
 
     try {
-      const res = await fetch("/api/agent", {
+      const res = await fetch(apiUrl("/api/agent"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ anchors, origin, destination, prefs }),
