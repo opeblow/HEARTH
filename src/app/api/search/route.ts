@@ -7,6 +7,11 @@ import { handleOptions, withCors } from "@/lib/security/cors";
 
 export const dynamic = "force-dynamic";
 
+/** CORS preflight. */
+export function OPTIONS(request: Request) {
+  return handleOptions(request) ?? new Response(null, { status: 204 });
+}
+
 const querySchema = z.object({
   q: z.string().trim().min(1).max(80),
   type: z.string().max(40).optional(),
