@@ -5,6 +5,7 @@ import { enforceRateLimit } from "@/lib/security/ratelimit";
 import { getBudget } from "@/lib/qloo/cache";
 import { serverEnv } from "@/lib/security/env";
 import { normaliseCity } from "@/lib/security/sanitize";
+import { handleOptions, withCors } from "@/lib/security/cors";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -36,20 +37,29 @@ const bodySchema = z
   .strict();
 
 export async function POST(request: Request) {
+  const preflight = handleOptions(request);
+  if (preflight) return preflight;
+
   const limit = await enforceRateLimit(request);
   if (!limit.ok) {
-    return new Response(
-      JSON.stringify({ error: "You're moving fast. Try again in a minute." }),
-      { status: 429, headers: { "content-type": "application/json", "Retry-After": "60" } },
+    return withCors(
+      new Response(
+        JSON.stringify({ error: "You're moving fast. Try again in a minute." }),
+        { status: 429, headers: { "content-type": "application/json", "Retry-After": "60" } },
+      ),
+      request,
     );
   }
 
   const env = serverEnv();
   const spent = await getBudget("qloo").catch(() => 0);
   if (spent >= env.DAILY_QLOO_BUDGET) {
-    return new Response(
-      JSON.stringify({ error: "The live demo is resting for today. Please try again tomorrow." }),
-      { status: 503, headers: { "content-type": "application/json" } },
+    return withCors(
+      new Response(
+        JSON.stringify({ error: "The live demo is resting for today. Please try again tomorrow." }),
+        { status: 503, headers: { "content-type": "application/json" } },
+      ),
+      request,
     );
   }
 
@@ -57,12 +67,18 @@ export async function POST(request: Request) {
   try {
     json = await request.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid request." }), { status: 400 });
+    return withCors(
+      new Response(JSON.stringify({ error: "Invalid request." }), { status: 400 }),
+      request,
+    );
   }
 
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) {
-    return new Response(JSON.stringify({ error: "Invalid request." }), { status: 400 });
+    return withCors(
+      new Response(JSON.stringify({ error: "Invalid request." }), { status: 400 }),
+      request,
+    );
   }
 
   const input = {
@@ -89,12 +105,15 @@ export async function POST(request: Request) {
     },
   });
 
-  return new Response(stream, {
-    headers: {
-      "content-type": "text/event-stream; charset=utf-8",
-      "cache-control": "no-store, no-transform",
-      connection: "keep-alive",
-      "x-accel-buffering": "no",
-    },
-  });
+  return withCors(
+    new Response(stream, {
+      headers: {
+        "content-type": "text/event-stream; charset=utf-8",
+        "cache-control": "no-store, no-transform",
+        connection: "keep-alive",
+        "x-accel-buffering": "no",
+      },
+    }),
+    request,
+  );
 }
