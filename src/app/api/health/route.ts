@@ -6,6 +6,11 @@ import { handleOptions, withCors } from "@/lib/security/cors";
 
 export const dynamic = "force-dynamic";
 
+/** CORS preflight. */
+export function OPTIONS(request: Request) {
+  return handleOptions(request) ?? new Response(null, { status: 204 });
+}
+
 /** Dependency status without leaking secrets. */
 export async function GET(request: Request) {
   const preflight = handleOptions(request);
