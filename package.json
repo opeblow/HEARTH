@@ -5,6 +5,7 @@
   "description": "Rebuild your cultural home in any city. A taste-transfer agent powered by the Qloo Taste API.",
   "license": "MIT",
   "type": "module",
+  "packageManager": "pnpm@11.9.0",
   "engines": {
     "node": ">=22.13"
   },
