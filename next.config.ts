@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === "production";
-// Split hosting: STATIC_EXPORT=1 produces a static `out/` for Cloudflare Pages
-// (the API stays on a Node host such as Render).
-const isStaticExport = process.env.STATIC_EXPORT === "1";
+// Split hosting: a static `out/` for Cloudflare Pages (the API stays on a Node
+// host such as Render). `CF_PAGES` is set automatically by Cloudflare builds.
+const isStaticExport = process.env.STATIC_EXPORT === "1" || process.env.CF_PAGES === "1";
 
 /**
  * Strict Content-Security-Policy. No inline scripts except the Next.js
