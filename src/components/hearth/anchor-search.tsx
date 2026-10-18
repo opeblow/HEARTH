@@ -4,6 +4,7 @@ import * as React from "react";
 import { Plus, X } from "lucide-react";
 import { PlaceholderSearch } from "@/components/aceternity/placeholders-and-vanish-input";
 import { Badge } from "@/components/ui/badge";
+import { apiUrl } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { EntityRef } from "@/lib/domain";
 
@@ -60,7 +61,7 @@ export function AnchorSearch({
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
+        const res = await fetch(apiUrl(`/api/search?q=${encodeURIComponent(q)}`), {
           signal: controller.signal,
         });
         if (!res.ok) throw new Error("search failed");
