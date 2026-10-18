@@ -10,6 +10,11 @@ import { handleOptions, withCors } from "@/lib/security/cors";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+/** CORS preflight. */
+export function OPTIONS(request: Request) {
+  return handleOptions(request) ?? new Response(null, { status: 204 });
+}
+
 const anchorSchema = z.object({
   id: z.string().min(1).max(80),
   name: z.string().min(1).max(120),
