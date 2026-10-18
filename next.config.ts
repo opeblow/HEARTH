@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === "production";
+// Split hosting: STATIC_EXPORT=1 produces a static `out/` for Cloudflare Pages
+// (the API stays on a Node host such as Render).
+const isStaticExport = process.env.STATIC_EXPORT === "1";
 
 /**
  * Strict Content-Security-Policy. No inline scripts except the Next.js
@@ -56,6 +59,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
+  ...(isStaticExport ? { output: "export" as const, images: { unoptimized: true } } : {}),
   experimental: {
     // Tree-shake barrel imports (icons/motion/utils) down to the modules we
     // actually use — smaller client bundles, faster cold renders.
@@ -67,8 +71,12 @@ const nextConfig: NextConfig = {
       "class-variance-authority",
     ],
   },
-  async headers() {
-    return [
+  // Static export is served by the CDN with public/_headers instead.
+  ...(isStaticExport
+    ? {}
+    : {
+        async headers() {
+          return [
       { source: "/(.*)", headers: securityHeaders },
       {
         source: "/api/(.*)",
@@ -78,8 +86,9 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex" },
         ],
       },
-    ];
-  },
+          ];
+        },
+      }),
 };
 
 export default nextConfig;
