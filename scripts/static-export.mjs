@@ -38,7 +38,12 @@ for (const stale of [".next/dev", ".next/types", "out"]) {
 
 let exitCode = 1;
 try {
-  const result = spawnSync("next build", { stdio: "inherit", env: process.env, shell: true });
+  // Force the flag so the mode is explicit even outside Cloudflare.
+  const result = spawnSync("next build", {
+    stdio: "inherit",
+    env: { ...process.env, STATIC_EXPORT: "1" },
+    shell: true,
+  });
   if (result.error) console.error("[static-export]", result.error.message);
   exitCode = result.status ?? 1;
 } finally {
