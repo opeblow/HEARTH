@@ -42,12 +42,42 @@
 
 ---
 
+## For judges
+
+### Try it in 60 seconds
+
+1. Open **[qloo-product.pages.dev](https://qloo-product.pages.dev)**.
+2. Click **Start with a demo persona**. This is Adaeze, an MSc student moving from Lagos to Toronto.
+3. Her favourites are matched to real Qloo entities and the agent runs **live**. Watch each step stream in.
+4. On the results page, open **View trace** to see every Qloo call and how many ungrounded picks were removed.
+5. Click **See the 30-day plan**, then **Export to calendar** to download it as an `.ics` file.
+6. Try **Blend** (shared taste for two) and **Proof** (Hearth vs. an LLM-only answer).
+
+Backend status: [`/api/health`](https://qloo-product.onrender.com/api/health) reports live Qloo, AI model and Redis status. The first request after the backend has been idle can take up to a minute while Render wakes it up.
+
+### Judging scorecard
+
+| Criterion | How Hearth delivers | Where to see it |
+| --- | --- | --- |
+| **Use of the Qloo Taste API** | Qloo is the source of truth for every result, not a side feature. Free-text favourites are resolved to Qloo entity ids (`/search`), then replayed against the destination city through `/insights` across **five concurrent domains**: Comfort, Community, Discovery, a cross-domain sweep (artists, films, brands), and neighbourhoods built from real Qloo `neighborhood` data. Affinity scores are shown in the UI. | [How we use Qloo](#how-we-use-qloo) · `src/lib/qloo/` · results page |
+| **Intelligent use of LLMs** | The AI model does what it is good at (writing the reasons and the week-by-week plan) and nothing it is bad at (inventing places). It receives only this run's Qloo data, labelled as untrusted, and must return schema-checked JSON. A verifier drops any id it invented, and any week it leaves empty falls back to a plan built without the AI. Prompt-injection attempts in user input are filtered. | [The grounding contract](#the-grounding-contract) · `src/lib/agent/` · `/proof` |
+| **Technical implementation** | Next.js 16 + React 19 + strict TypeScript. A streamed agent pipeline (Server-Sent Events) with concurrent fan-out, request coalescing, a 24 h Redis cache, retries with backoff, timeouts and daily budgets. Zod validation at every boundary. 48 tests, CI on Node 22 and 24, CodeQL scanning. Deployed as a Cloudflare Pages frontend plus a Render API. | [Architecture](#architecture) · [Testing](#testing) · [Deployment](#deployment) |
+| **Originality & creativity** | Relocation tools handle rent and commute. Hearth answers *"where do I go to feel like myself again?"* Its ideas are its own: taste transfer between cities, the ordered Comfort → Community → Discovery landing, a familiarity dial, Blend for two people, and a 30-day soft-landing plan. | [Features](#features) · landing page |
+| **Real-world impact** | Built for students, expats, migrants and people returning home, in cities the usual tools ignore (Lagos, Accra, Seoul, Toronto, Berlin). No account and no email; profiles stay on the device. It is a working product today, with security and spending limits suitable for the public internet. | [Personas](#demo-personas) · [Data & privacy](#data--privacy) |
+| **Presentation & documentation** | A live deployment, a demo video, a one-click persona flow, an inspectable agent trace, and this README. | [Demo video](https://youtu.be/JSKGUbFVmv4) · this document |
+
+---
+
 ## Table of contents
 
+- [For judges](#for-judges)
 - [Overview](#overview)
 - [Why Hearth](#why-hearth)
 - [Features](#features)
+- [Demo personas](#demo-personas)
+- [Pages](#pages)
 - [How it works](#how-it-works)
+- [Architecture](#architecture)
 - [How we use Qloo](#how-we-use-qloo)
 - [The grounding contract](#the-grounding-contract)
 - [Tech stack](#tech-stack)
@@ -63,6 +93,7 @@
 - [Security](#security)
 - [Accessibility](#accessibility)
 - [Troubleshooting](#troubleshooting)
+- [FAQ](#faq)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
@@ -83,7 +114,8 @@ verifier drops anything the model can't trace back.
 
 One codebase ships both the product and its backend: Next.js App Router pages
 for the frontend, route handlers (`/api/*`) for the agent, search, sharing and
-health — deployable to any Node host in one step.
+health. It runs as a single Node app, or split: the live deployment serves a
+static frontend from **Cloudflare Pages** and the API from **Render**.
 
 ## Why Hearth
 
@@ -105,9 +137,9 @@ its work at every step.
   the location filter across three buckets: Comfort, Community, Discovery.
 - **Grounded agent run** — a streamed, typed agent loop fans out across five
   Qloo domains concurrently and emits a live trace you can watch in the UI.
-- **30-day soft-landing plan** — day-by-day itinerary grouped by Comfort,
-  Community and Discovery, ordered to cut travel, exportable as an `.ics`
-  calendar file.
+- **30-day soft-landing plan** — a week-by-week plan (four weeks) that moves
+  from Comfort to Community to Discovery, exportable as an `.ics` calendar file
+  generated entirely on your device.
 - **Taste Bridge** — a side-by-side comparison of your origin city's scene and
   its destination-city equivalents.
 - **Blend** — merge two people's taste profiles into one shared plan (roommates,
@@ -121,6 +153,31 @@ its work at every step.
   nothing about you is stored server-side.
 - **Strict security posture** — CSP, HSTS, COOP/CORP, locked-down
   `Permissions-Policy`, per-IP rate limiting and daily API budgets.
+
+## Demo personas
+
+One click on a persona fills in the intake and starts a live run.
+
+| Persona | Move | Favourites | Profile |
+| --- | --- | --- | --- |
+| **Adaeze** | Lagos → Toronto | Terra Kulture, Freedom Park Lagos, Nike Art Gallery, Lagos Island, Suya | MSc student; music and food first. Lively, low budget, solo. |
+| **Ji-woo** | Seoul → Berlin | Hongdae, Euljiro, Seongsu-dong, Gwangjang Market | Product designer moving for a studio job. Balanced, mid budget, solo. |
+| **Kwame** | London → Accra | +233 Jazz Bar & Grill, Nubuke Foundation, Jamestown, Makola Market | Returning home after a decade away. Balanced, mid budget, couple. |
+
+Defined in `src/lib/personas.ts`.
+
+## Pages
+
+| Route | What it does |
+| --- | --- |
+| `/` | Landing page: the story, how it works, personas. |
+| `/start` | Intake: search favourites, set origin/destination, familiarity dial and preferences, then run the agent. |
+| `/bridge` | Results: Taste Bridge, Comfort / Community / Discovery cards, neighbourhood compass, agent trace. |
+| `/plan` | The 30-day soft-landing plan, with `.ics` export. |
+| `/blend` | Blend two people's taste and publish a shareable card. |
+| `/s/[id]` | A shared card (server-rendered; on Cloudflare it is rewritten to `/card`). |
+| `/proof` | How Hearth compares to an LLM-only baseline, and how grounding works. |
+| `/privacy` | What stays on your device and what leaves it. |
 
 ## How it works
 
@@ -138,6 +195,44 @@ its work at every step.
 The whole loop streams back to the browser as a typed SSE trace, so you watch it
 resolve anchors, fan out across the taste graph, rank neighbourhoods and write
 the plan — in real time, not after a spinner.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  U["Browser<br/>profile in localStorage"] -->|static pages| CF["Cloudflare Pages<br/>Next.js static export"]
+  U -->|"fetch + SSE (CORS allowlist)"| API["Render · Next.js API<br/>/api/agent · /api/search<br/>/api/share · /api/health"]
+  API -->|"/search, /insights"| Q["Qloo Taste API"]
+  API -->|"plan copy (JSON only)"| L["LLM<br/>OpenAI-compatible"]
+  API <-->|"cache · rate limits<br/>budgets · share cards"| R[("Upstash Redis")]
+```
+
+### One agent run
+
+```mermaid
+sequenceDiagram
+  participant B as Browser
+  participant A as /api/agent
+  participant Q as Qloo
+  participant L as LLM
+  B->>A: POST anchors, destination, prefs
+  A-->>B: trace: resolve
+  A->>Q: insights × 5 domains (concurrent)
+  A-->>B: trace: transfer / community / discovery / cross-domain / compass
+  A->>L: grounded places only (untrusted data)
+  L-->>A: JSON plan
+  A->>A: verifier drops invented ids
+  A-->>B: trace: compose → verify → done
+  A-->>B: result (places, neighbourhoods, plan, source)
+```
+
+| Layer | Responsibility | Key files |
+| --- | --- | --- |
+| UI | Pages, streaming run console, results, plan, blend | `src/app/*`, `src/components/hearth/*` |
+| Agent | Orchestration, fan-out, verification, plan composition | `src/lib/agent/run.ts`, `verifier.ts`, `planner.ts`, `prompts.ts`, `llm.ts` |
+| Qloo | Client, retries, cache, coalescing, schemas, fixtures | `src/lib/qloo/*` |
+| Security | Env validation, CORS, rate limit, input sanitising | `src/lib/security/*` |
+| Client API base | Same-origin or split-hosting API URL | `src/lib/api.ts` |
 
 ## How we use Qloo
 
@@ -232,13 +327,15 @@ To run live, set `QLOO_API_KEY` (and optionally an LLM key) in `.env.local`.
 
 ## Environment variables
 
-All variables are **server-side only** (see `.env.example`). The Qloo and LLM
+Everything except `NEXT_PUBLIC_*` is **server-side only** (see `.env.example`). The Qloo and LLM
 keys are never prefixed `NEXT_PUBLIC_` and never reach the browser. Blank values
 are treated as unset, so hosts that inject empty vars are safe.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | `https://hearth.app` | Public site URL for metadata / Open Graph. |
+| `NEXT_PUBLIC_API_BASE_URL` | — (same origin) | **Frontend build only.** Backend URL for split hosting, e.g. `https://qloo-product.onrender.com`. |
+| `CORS_ALLOW_ORIGINS` | — (same origin only) | **Backend only.** Comma-separated frontend origins allowed to call `/api/*`, e.g. `https://qloo-product.pages.dev`. |
 | `QLOO_API_KEY` | — | Qloo Taste API key. Absent → fixtures mode. |
 | `QLOO_BASE_URL` | `https://hackathon.api.qloo.com/v2` | Qloo API base URL. |
 | `QLOO_MODE` | `auto` | `auto` \| `live` \| `fixtures`. `auto` = live when a key exists. |
@@ -262,7 +359,8 @@ be served to production users.
 | Script | What it does |
 | --- | --- |
 | `pnpm dev` | Start the dev server (Turbopack). |
-| `pnpm build` | Production build. |
+| `pnpm build` | Production build (single Node app, or the Render backend). |
+| `pnpm build:static` | Static export to `out/` for Cloudflare Pages (`scripts/static-export.mjs`). |
 | `pnpm start` | Serve the production build. |
 | `pnpm typecheck` | `tsc --noEmit`. |
 | `pnpm lint` | ESLint (flat config). |
@@ -282,6 +380,11 @@ HEARTH/
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   └── landing.jpg                    Landing page screenshot
+├── public/
+│   ├── _headers                       Cloudflare Pages security headers (CSP allows the API origin)
+│   └── _redirects                     Cloudflare Pages rewrite: /s/:id → /card
+├── scripts/
+│   └── static-export.mjs              Static build for Cloudflare (sets server routes aside)
 ├── src/
 │   ├── app/                           Next.js App Router
 │   │   ├── layout.tsx                 Root layout: fonts, theme, nav
@@ -296,7 +399,8 @@ HEARTH/
 │   │   ├── blend/                     Blend two people's taste
 │   │   ├── proof/                     Hearth vs an LLM-only baseline
 │   │   ├── privacy/                   What stays on your device
-│   │   ├── s/[id]/                    Shared result card
+│   │   ├── s/[id]/                    Shared result card (server-rendered)
+│   │   ├── card/                      Shared result card (client-side, for static hosting)
 │   │   └── api/
 │   │       ├── agent/route.ts         POST: SSE agent run (+ route.test.ts)
 │   │       ├── search/route.ts        GET: anchor search
@@ -310,7 +414,8 @@ HEARTH/
 │   ├── lib/
 │   │   ├── agent/                     run loop, verifier, planner, prompts, llm, events
 │   │   ├── qloo/                      client, cache, queries, schemas, fixtures, engine
-│   │   ├── security/                  env validation, sanitize, ratelimit
+│   │   ├── security/                  env validation, CORS, sanitize, ratelimit
+│   │   ├── api.ts                     API base URL for split hosting
 │   │   ├── domain.ts                  Core domain types
 │   │   ├── share.ts                   Share-card data helpers
 │   │   ├── ics.ts                     ICS calendar generation
@@ -349,17 +454,33 @@ ending in a `result` event.
 curl -N -X POST https://your-host/api/agent \
   -H "content-type: application/json" \
   -d '{
-    "anchors": [{ "id": "urn:entity:...", "name": "Dishoom", "type": "place" }],
+    "anchors": [{ "id": "<qloo-entity-id>", "name": "Dishoom", "type": "place", "tags": [] }],
     "origin": "London",
     "destination": "Lisbon",
-    "prefs": { "food": true, "music": true, "nightlife": true, "film": true }
+    "prefs": {
+      "familiarity": 0.5, "vibe": "balanced", "budget": "mid",
+      "dietary": [], "accessibility": [], "who": "solo"
+    }
   }'
 ```
 
-Event kinds stream in run order: `run.started` → `anchor.resolved` (per anchor)
-→ `domain.started` / `domain.settled` (comfort, community, discovery, cross,
-hoods — as each lands) → `verified` (grounding results, including dropped
-counts) → `plan.composed` → `result`.
+| Field | Rules |
+| --- | --- |
+| `anchors` | 1–10 items. `type` is one of `place`, `artist`, `film`, `tv`, `dining`, `brand`, `book`, `podcast`. Up to 20 `tags`. |
+| `origin` | Optional, up to 60 characters. |
+| `destination` | Required, up to 60 characters. |
+| `prefs.familiarity` | `0` (home) to `1` (surprise me). |
+| `prefs.vibe` / `budget` / `who` | `quiet`, `balanced`, `lively` · `low`, `mid`, `high` · `solo`, `couple`, `group`. |
+
+Unknown fields are rejected. The stream sends three message types: `trace`,
+`result` and `error`. Trace events carry a `kind` in run order: `resolve` →
+`transfer` · `community` · `discovery` · `cross-domain` · `compass` (concurrent)
+→ `compose` → `verify` → `done`, each with a status and Qloo call counts. The
+final `result` holds places, neighbourhoods, the plan, the source label and the
+number of picks the verifier rejected.
+
+All routes answer CORS preflight (`OPTIONS`) and add CORS headers only for
+origins listed in `CORS_ALLOW_ORIGINS`.
 
 ### `GET /api/search?q=`
 
@@ -431,13 +552,14 @@ Hearth is built to feel instant, and the agent pipeline is engineered for it:
 ## Testing
 
 ```bash
-pnpm test        # 45 tests across agent, qloo, security, API and utils
+pnpm test        # 48 tests across agent, qloo, security, API, CORS and utils
 pnpm verify      # typecheck + lint + tests (what CI enforces)
 ```
 
 Coverage includes the agent control flow (fan-out, discovery post-filter,
-grounding), the streaming `/api/agent` route, the verifier, query builders, the
-fixture engine, and input sanitisation. The `server-only` marker is stubbed for
+grounding), the streaming `/api/agent` route, CORS preflight on every API route,
+the verifier, the planner, query builders, the fixture engine, and input
+sanitisation. The `server-only` marker is stubbed for
 tests via `vitest.config.ts` so server modules can be imported directly.
 
 CI runs the full gate on Node 22 and 24, then performs a production build in
@@ -445,22 +567,48 @@ fixture mode — the build must succeed with zero secrets.
 
 ## Deployment
 
-Any Node host works (Vercel, Fly.io, Render, Railway, a container). Frontend
-and backend ship together from this one repo.
+Hearth runs as one Node app, or split across two hosts. The live demo is split:
 
-### Vercel (recommended)
+| Part | Host | URL |
+| --- | --- | --- |
+| Frontend (static) | Cloudflare Pages | https://qloo-product.pages.dev |
+| Backend API | Render (Node web service) | https://qloo-product.onrender.com |
 
-1. Import the GitHub repo — Vercel auto-detects Next.js.
-2. Set the environment variables from the table above (Production + Preview).
-3. Deploy. Verify with `GET /api/health`.
+### Backend on Render
 
-### Any Node host
+| Setting | Value |
+| --- | --- |
+| Build command | `corepack enable && pnpm install --frozen-lockfile && pnpm build` |
+| Start command | `pnpm start` (listens on Render's `PORT`) |
+| Health check path | `/api/health` |
+| Node version | from `.nvmrc` (22) |
+| Environment | `QLOO_API_KEY`, `QLOO_BASE_URL`, `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `CORS_ALLOW_ORIGINS=https://<your-pages-domain>` |
+
+### Frontend on Cloudflare Pages
+
+| Setting | Value |
+| --- | --- |
+| Build command | `pnpm build:static` |
+| Output directory | `out` |
+| Environment | `NEXT_PUBLIC_API_BASE_URL=https://<your-render-domain>`, `NEXT_PUBLIC_SITE_URL=https://<your-pages-domain>`, `NODE_VERSION=22` |
+
+Also update `connect-src` in `public/_headers` to your Render URL, or the
+browser will block API calls. `public/_redirects` rewrites `/s/:id` to the
+client-side `/card` page, which fetches the card from the API.
+
+**Deploy order:** deploy the backend first and copy its URL. Then deploy the
+frontend with that URL, and finally add the frontend URL to
+`CORS_ALLOW_ORIGINS` on the backend and redeploy it.
+
+### Single Node host
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm build
-pnpm start       # serves on PORT (default 3000)
+pnpm start       # serves pages and API on PORT (default 3000)
 ```
+
+Works on Render, Fly.io, Railway, Vercel or a container. No CORS setup is needed.
 
 ### Production checklist
 
@@ -470,6 +618,7 @@ pnpm start       # serves on PORT (default 3000)
       limits, daily budgets and share cards all live here)
 - [ ] `NEXT_PUBLIC_SITE_URL` set to the canonical public URL (drives OG/meta)
 - [ ] Optional: `LLM_API_KEY` + `LLM_MODEL` for narrative planning
+- [ ] Split hosting: `CORS_ALLOW_ORIGINS` (backend), `NEXT_PUBLIC_API_BASE_URL` (frontend build), and `connect-src` in `public/_headers` all point at each other
 - [ ] `GET /api/health` returns `"status": "ok"` after deploy
 - [ ] Rate-limit and budget values sized for your traffic
 
@@ -487,6 +636,8 @@ See [SECURITY.md](./SECURITY.md). Highlights:
 | COOP / CORP | `same-origin` for both. |
 | Permissions-Policy | Camera, microphone, geolocation, payment, sensors all denied. |
 | API hygiene | `no-store` + `noindex` on all `/api/*`; per-IP rate limits; daily budgets. |
+| CORS | Exact-origin allowlist (`CORS_ALLOW_ORIGINS`); other origins get no CORS headers. |
+| LLM safety | Model output is schema-validated JSON; invented entity ids are dropped; Qloo data is passed to the model labelled as untrusted. |
 | Input handling | Zod validation at every boundary; prompt-injection payloads refused. |
 | Secrets | Server-only, validated at boot, never `NEXT_PUBLIC_`, never logged. |
 
@@ -509,6 +660,28 @@ See [SECURITY.md](./SECURITY.md). Highlights:
 | Everything shows `demo` labels | No `QLOO_API_KEY` is visible to the server; check the host's env (not `.env.local`) and `QLOO_MODE`. |
 | 429s from the API | Per-IP limit or daily budget hit; raise `RATE_LIMIT_PER_MINUTE` / `DAILY_QLOO_BUDGET` or wait for the window to reset. |
 | Slow first run | Cold Upstash + empty cache; subsequent identical runs hit the 24 h cache. |
+| First request takes ~1 minute | Render has put an idle backend to sleep; it wakes on the first request. |
+| Browser console: CORS error | Add the exact frontend origin (no trailing slash) to `CORS_ALLOW_ORIGINS` on the backend and redeploy. |
+| Browser console: blocked by CSP `connect-src` | Put your backend URL in `public/_headers` and redeploy the frontend. |
+| Shared `/s/<id>` link says "Card not found" on Cloudflare | Check `public/_redirects` is in `out/` and the card id is valid; cards can be revoked. |
+| CI: "Multiple versions of pnpm specified" | Keep the pnpm version only in `package.json` (`packageManager`), not in the workflow. |
+
+## FAQ
+
+**Does Hearth ever make up a place?**
+No. Every place comes from a Qloo response in the current run. The AI model writes descriptions only, and the verifier removes any id it did not get from Qloo.
+
+**What happens without an AI model key?**
+Hearth uses its own rule-based composer to build the plan. Everything still works and stays grounded.
+
+**What happens without a Qloo key?**
+In development, Hearth serves recorded demo data labelled `demo`. In production it refuses to start.
+
+**Do I need an account?**
+No. Your profile stays in your browser. Only the favourites you search for and the run inputs are sent to the API.
+
+**Which cities work?**
+Any city Qloo has data for. The personas show Toronto, Berlin and Accra.
 
 ## Roadmap
 
