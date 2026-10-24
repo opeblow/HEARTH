@@ -14,7 +14,7 @@
   <a href="https://qloo-product.onrender.com/api/health">API health</a>
 </p>
 
-<h3 align="center">🎬 DEMO VIDEO</h3>
+<h3 align="center">DEMO VIDEO</h3>
 
 <p align="center">
   <a href="https://youtu.be/JSKGUbFVmv4">
