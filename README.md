@@ -10,6 +10,11 @@
 </p>
 
 <p align="center">
+  <a href="https://qloo-product.pages.dev"><b>▶ Try the live app</b></a> ·
+  <a href="https://qloo-product.onrender.com/api/health">API health</a>
+</p>
+
+<p align="center">
   <a href="https://github.com/opeblow/HEARTH/actions/workflows/ci.yml"><img src="https://github.com/opeblow/HEARTH/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/opeblow/HEARTH/actions/workflows/codeql.yml"><img src="https://github.com/opeblow/HEARTH/actions/workflows/codeql.yml/badge.svg" alt="CodeQL" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-e7b66a.svg" alt="License: MIT" /></a>
@@ -22,7 +27,7 @@
 ---
 
 <p align="center">
-  <img src="docs/landing.jpg" alt="Hearth landing page" width="920" />
+  <a href="https://qloo-product.pages.dev"><img src="docs/landing.jpg" alt="Hearth landing page — open the live app" width="920" /></a>
 </p>
 
 ---
