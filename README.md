@@ -55,16 +55,31 @@
 
 Backend status: [`/api/health`](https://qloo-product.onrender.com/api/health) reports live Qloo, AI model and Redis status. The first request after the backend has been idle can take up to a minute while Render wakes it up.
 
-### Judging scorecard
+### Stage One: theme and required API
+
+| Requirement | Hearth | Evidence |
+| --- | --- | --- |
+| Working software that integrates the Qloo API | ✅ Every place, artist, film and neighbourhood Hearth shows comes from the Qloo Taste API (`/search` + `/insights`). Without a Qloo key, production refuses to start. | `src/lib/qloo/client.ts` · live [`/api/health`](https://qloo-product.onrender.com/api/health) shows `"qloo": { "mode": "live" }` |
+| Functions as an agentic tool | ✅ One goal ("make this city feel like home") drives a multi-step agent: resolve favourites → plan five Qloo queries → run them concurrently → verify every result → compose a plan. Each step streams live as a trace the user can inspect. | `src/lib/agent/run.ts` · **View trace** on the results page |
+
+### Stage Two: judging criteria (equally weighted)
 
 | Criterion | How Hearth delivers | Where to see it |
 | --- | --- | --- |
-| **Use of the Qloo Taste API** | Qloo is the source of truth for every result, not a side feature. Free-text favourites are resolved to Qloo entity ids (`/search`), then replayed against the destination city through `/insights` across **five concurrent domains**: Comfort, Community, Discovery, a cross-domain sweep (artists, films, brands), and neighbourhoods built from real Qloo `neighborhood` data. Affinity scores are shown in the UI. | [How we use Qloo](#how-we-use-qloo) · `src/lib/qloo/` · results page |
-| **Intelligent use of LLMs** | The AI model does what it is good at (writing the reasons and the week-by-week plan) and nothing it is bad at (inventing places). It receives only this run's Qloo data, labelled as untrusted, and must return schema-checked JSON. A verifier drops any id it invented, and any week it leaves empty falls back to a plan built without the AI. Prompt-injection attempts in user input are filtered. | [The grounding contract](#the-grounding-contract) · `src/lib/agent/` · `/proof` |
-| **Technical implementation** | Next.js 16 + React 19 + strict TypeScript. A streamed agent pipeline (Server-Sent Events) with concurrent fan-out, request coalescing, a 24 h Redis cache, retries with backoff, timeouts and daily budgets. Zod validation at every boundary. 48 tests, CI on Node 22 and 24, CodeQL scanning. Deployed as a Cloudflare Pages frontend plus a Render API. | [Architecture](#architecture) · [Testing](#testing) · [Deployment](#deployment) |
-| **Originality & creativity** | Relocation tools handle rent and commute. Hearth answers *"where do I go to feel like myself again?"* Its ideas are its own: taste transfer between cities, the ordered Comfort → Community → Discovery landing, a familiarity dial, Blend for two people, and a 30-day soft-landing plan. | [Features](#features) · landing page |
-| **Real-world impact** | Built for students, expats, migrants and people returning home, in cities the usual tools ignore (Lagos, Accra, Seoul, Toronto, Berlin). No account and no email; profiles stay on the device. It is a working product today, with security and spending limits suitable for the public internet. | [Personas](#demo-personas) · [Data & privacy](#data--privacy) |
-| **Presentation & documentation** | A live deployment, a demo video, a one-click persona flow, an inspectable agent trace, and this README. | [Demo video](https://youtu.be/JSKGUbFVmv4) · this document |
+| **Technological Implementation**<br/>*How thoroughly and skillfully does it use Qloo? Is it working and non-trivial?* | **Qloo depth:** favourites are resolved to Qloo entity ids, then used as the taste signal (`signal.interests.entities`) with the destination city as a location filter. **Five concurrent `/insights` domains:** Comfort, Community, Discovery (shaped with exclusion), a cross-domain sweep (artists, films, brands), and neighbourhoods grouped from real Qloo `neighborhood` data. Qloo affinity scores are normalised and shown to users.<br/>**Engineering around Qloo:** Zod-validated responses, per-call timeouts, 4 retries with jittered backoff that honours `Retry-After`, in-flight request coalescing, a 24 h Redis cache, and daily call budgets.<br/>**Grounded AI:** the AI model only writes copy for places Qloo returned; a deterministic verifier drops anything else.<br/>**Quality:** strict TypeScript, 48 tests, CI on Node 22 and 24, CodeQL, and a live split deployment. | [How we use Qloo](#how-we-use-qloo) · [Architecture](#architecture) · [The grounding contract](#the-grounding-contract) · [Testing](#testing) |
+| **Design**<br/>*A complete, coherent product, not a proof of concept?* | A full product journey: landing → intake (or one-click persona) → live agent run → Taste Bridge results → 30-day plan with calendar export → Blend for two → shareable, revocable cards. It also has its own design system (warm, cinematic, light and dark themes), honest `live` / `cached` / `demo` labels, accessible keyboard and screen-reader support, reduced-motion support, and plain-language Proof and Privacy pages. | [Pages](#pages) · [Features](#features) · [Accessibility](#accessibility) · [live app](https://qloo-product.pages.dev) |
+| **Potential Impact**<br/>*A specific problem for a real audience, actually solved?* | **Problem:** after a move, people lose the places that made them feel like themselves, and search and LLMs give everyone the same generic, often invented, list. **Audience:** students, expats, migrants and people returning home, especially from or to cities generic tools under-serve (Lagos, Accra, Seoul). **Solution, as demonstrated:** real places matched to *your* taste, ordered so you settle in (familiar first), turned into a 30-day plan you can put in your calendar. No account and no tracking, so it is safe for people on the move. | [Why Hearth](#why-hearth) · [Demo personas](#demo-personas) · [Data & privacy](#data--privacy) · [demo video](https://youtu.be/JSKGUbFVmv4) |
+| **Quality of the Idea**<br/>*Creative, non-obvious use of Qloo? Real understanding of the problem?* | Most Qloo apps answer *"what will I like?"*. Hearth asks *"what did I love **there**, and what is its equivalent **here**?"* It uses Qloo's cross-domain taste graph as a bridge between two cities. Settling in is treated as a sequence, not a search: **Comfort** first, then **Community**, then **Discovery**, with a familiarity dial for how far to stretch. **Blend** merges two people's taste for couples and friends moving together. | [How it works](#how-it-works) · `/bridge` · `/blend` · `/proof` |
+
+### Submission checklist
+
+| Requirement | Status |
+| --- | --- |
+| Functional demo | ✅ [qloo-product.pages.dev](https://qloo-product.pages.dev) (free, no login) |
+| Public repository with all source and instructions | ✅ This repo · [Quick start](#quick-start) · [Deployment](#deployment) |
+| Open-source license visible on the repo | ✅ [MIT](./LICENSE) |
+| Demo video | ✅ [youtu.be/JSKGUbFVmv4](https://youtu.be/JSKGUbFVmv4) |
+| New project | ✅ Built from scratch during the submission period (October 2026), with Qloo at its core from the first commit. |
 
 ---
 
