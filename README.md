@@ -14,6 +14,16 @@
   <a href="https://qloo-product.onrender.com/api/health">API health</a>
 </p>
 
+<h3 align="center">🎬 DEMO VIDEO</h3>
+
+<p align="center">
+  <a href="https://youtu.be/JSKGUbFVmv4">
+    <img src="https://img.youtube.com/vi/JSKGUbFVmv4/maxresdefault.jpg" alt="Watch the Hearth demo video on YouTube" width="820" />
+  </a>
+  <br />
+  <a href="https://youtu.be/JSKGUbFVmv4"><b>▶ Watch on YouTube: https://youtu.be/JSKGUbFVmv4</b></a>
+</p>
+
 <p align="center">
   <a href="https://github.com/opeblow/HEARTH/actions/workflows/ci.yml"><img src="https://github.com/opeblow/HEARTH/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/opeblow/HEARTH/actions/workflows/codeql.yml"><img src="https://github.com/opeblow/HEARTH/actions/workflows/codeql.yml/badge.svg" alt="CodeQL" /></a>
