@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://qloo-product.pages.dev"><b>▶ Try the live app</b></a> ·
+  <a href="https://qloo-product.pages.dev"><b>Try the live app</b></a> ·
   <a href="https://qloo-product.onrender.com/api/health">API health</a>
 </p>
 
@@ -21,7 +21,7 @@
     <img src="https://img.youtube.com/vi/JSKGUbFVmv4/maxresdefault.jpg" alt="Watch the Hearth demo video on YouTube" width="820" />
   </a>
   <br />
-  <a href="https://youtu.be/JSKGUbFVmv4"><b>▶ Watch on YouTube: https://youtu.be/JSKGUbFVmv4</b></a>
+  <a href="https://youtu.be/JSKGUbFVmv4"><b>Watch on YouTube: https://youtu.be/JSKGUbFVmv4</b></a>
 </p>
 
 <p align="center">
@@ -59,8 +59,8 @@ Backend status: [`/api/health`](https://qloo-product.onrender.com/api/health) re
 
 | Requirement | Hearth | Evidence |
 | --- | --- | --- |
-| Working software that integrates the Qloo API | ✅ Every place, artist, film and neighbourhood Hearth shows comes from the Qloo Taste API (`/search` + `/insights`). Without a Qloo key, production refuses to start. | `src/lib/qloo/client.ts` · live [`/api/health`](https://qloo-product.onrender.com/api/health) shows `"qloo": { "mode": "live" }` |
-| Functions as an agentic tool | ✅ One goal ("make this city feel like home") drives a multi-step agent: resolve favourites → plan five Qloo queries → run them concurrently → verify every result → compose a plan. Each step streams live as a trace the user can inspect. | `src/lib/agent/run.ts` · **View trace** on the results page |
+| Working software that integrates the Qloo API | Every place, artist, film and neighbourhood Hearth shows comes from the Qloo Taste API (`/search` + `/insights`). Without a Qloo key, production refuses to start. | `src/lib/qloo/client.ts` · live [`/api/health`](https://qloo-product.onrender.com/api/health) shows `"qloo": { "mode": "live" }` |
+| Functions as an agentic tool | One goal ("make this city feel like home") drives a multi-step agent: resolve favourites → plan five Qloo queries → run them concurrently → verify every result → compose a plan. Each step streams live as a trace the user can inspect. | `src/lib/agent/run.ts` · **View trace** on the results page |
 
 ### Stage Two: judging criteria (equally weighted)
 
@@ -75,11 +75,11 @@ Backend status: [`/api/health`](https://qloo-product.onrender.com/api/health) re
 
 | Requirement | Status |
 | --- | --- |
-| Functional demo | ✅ [qloo-product.pages.dev](https://qloo-product.pages.dev) (free, no login) |
-| Public repository with all source and instructions | ✅ This repo · [Quick start](#quick-start) · [Deployment](#deployment) |
-| Open-source license visible on the repo | ✅ [MIT](./LICENSE) |
-| Demo video | ✅ [youtu.be/JSKGUbFVmv4](https://youtu.be/JSKGUbFVmv4) |
-| New project | ✅ Built from scratch during the submission period (October 2026), with Qloo at its core from the first commit. |
+| Functional demo | [qloo-product.pages.dev](https://qloo-product.pages.dev) (free, no login) |
+| Public repository with all source and instructions | This repo · [Quick start](#quick-start) · [Deployment](#deployment) |
+| Open-source license visible on the repo | [MIT](./LICENSE) |
+| Demo video | [youtu.be/JSKGUbFVmv4](https://youtu.be/JSKGUbFVmv4) |
+| New project | Built from scratch during the submission period (October 2026), with Qloo at its core from the first commit. |
 
 ---
 
