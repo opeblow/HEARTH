@@ -14,11 +14,15 @@ import type { ShareCard } from "@/lib/domain";
  */
 export function CardClient() {
   const params = useSearchParams();
-  const id = params.get("id") ?? "";
+  const queryId = params.get("id") ?? "";
   const [card, setCard] = React.useState<ShareCard | null>(null);
   const [state, setState] = React.useState<"loading" | "ready" | "missing">("loading");
 
   React.useEffect(() => {
+    // The CDN rewrite (/s/:id -> /card) keeps /s/:id in the address bar, so the
+    // id is usually in the path rather than the query string.
+    const pathId = window.location.pathname.match(/^\/s\/([a-f0-9]{32})\/?$/)?.[1];
+    const id = queryId || pathId || "";
     if (!/^[a-f0-9]{32}$/.test(id)) {
       setState("missing");
       return;
@@ -39,7 +43,7 @@ export function CardClient() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [queryId]);
 
   if (state === "loading") {
     return (

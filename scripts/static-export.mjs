@@ -39,10 +39,12 @@ for (const stale of [".next/dev", ".next/types", "out"]) {
 let exitCode = 1;
 try {
   // Force the flag so the mode is explicit even outside Cloudflare.
-  const result = spawnSync("next build", {
+  // Run the local Next CLI with this Node binary so the build works whether
+  // or not node_modules/.bin is on PATH (e.g. `node scripts/static-export.mjs`).
+  const nextBin = path.join(root, "node_modules", "next", "dist", "bin", "next");
+  const result = spawnSync(process.execPath, [nextBin, "build"], {
     stdio: "inherit",
     env: { ...process.env, STATIC_EXPORT: "1" },
-    shell: true,
   });
   if (result.error) console.error("[static-export]", result.error.message);
   exitCode = result.status ?? 1;
